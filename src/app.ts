@@ -10,11 +10,7 @@ app.get('/', (req, res) => {
     res.send('Server start message!');
 });
 
-// @ts-ignore
-app.listen(port, err => {
-    if (err) {
-        throw new Error(`Server error: ${err}`);
-    }
 
+app.listen(port, () => {
     return console.log(`Server listening on port: ${port}`);
 });
