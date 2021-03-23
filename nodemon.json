@@ -1,7 +1,9 @@
 {
   "watch": [
     "src",
-    ".env"
+    "knex",
+    ".env",
+    "knexfile.ts"
   ],
   "ext": "js,ts,json",
   "ignore": [
