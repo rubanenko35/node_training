@@ -1,16 +1,19 @@
 import express from 'express';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { expressLoader } from './loaders/express';
+import LoggerInstance from './loaders/logger';
+import config from './config';
 
 const app = express();
-const port = process.env.PORT;
 
-app.get('/', (req, res) => {
-    res.send('Server start message!');
-});
+app.listen(config.port, async () => {
+    await expressLoader({ app });
 
-
-app.listen(port, () => {
-    return console.log(`Server listening on port: ${port}`);
+    LoggerInstance.info(`
+      ################################################
+      🛡️  Server listening on port: ${config.port} 🛡️
+      ################################################
+    `);
+}).on('error', err => {
+    LoggerInstance.error(err);
+    process.exit(1);
 });
