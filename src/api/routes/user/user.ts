@@ -3,12 +3,13 @@ import LoggerInstance from '../../../loaders/logger';
 import fs from 'fs';
 
 const route = Router();
-const filePath = 'C:\\dev\\node_training\\src\\assets\\user-mocks.json';
+const filePath = 'C:\\dev\\node_training\\src\\assets\\user-mocks.json'; // TODO: move to .env file + use relative path
 
 export const users = (app: Router) => {
     app.use('/users', route);
 
     route.get('/getAll', (req: Request, res: Response) => {
+        // TODO: move this to controller + try/catch
         fs.readFile(filePath, 'utf8', (err, jsonString) => {
             if (err) {
                 LoggerInstance.error("File read failed:", err);
