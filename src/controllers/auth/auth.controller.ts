@@ -34,7 +34,7 @@ class AuthController {
         const isValid = await bCrypt.compare(password, user.password_hash);
 
         if (isValid) {
-            const token = jwt.sign(user.id.toString(), process.env.JWT_SECRET);
+            const token = jwt.sign(user.password_hash, process.env.JWT_SECRET);
             return  res.json({ token });
         } else {
             return res.status(401).json({ message: 'Invalid credentials. Wrong "password"' });

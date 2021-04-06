@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import config from '../config';
 import { routes } from '../api';
+import { authMiddleware } from '../middleware/auth/auth.middleware';
 
 export const expressLoader = ({ app }: { app: express.Application }) => {
   /**
@@ -27,6 +28,8 @@ export const expressLoader = ({ app }: { app: express.Application }) => {
 
   // Middleware that transforms the raw string of req.body into json
   app.use(bodyParser.json());
+
+  app.use(authMiddleware.verifyToken.bind(authMiddleware));
   // Load API routes
   app.use(config.api.prefix, routes());
 
