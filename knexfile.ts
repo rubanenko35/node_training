@@ -1,6 +1,4 @@
-import LoggerInstance from './src/loaders/logger';
-
-export const knexFileConfig = {
+module.exports = {
     development: {
         client: 'pg',
         connection: {

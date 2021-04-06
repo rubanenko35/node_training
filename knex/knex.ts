@@ -1,6 +1,6 @@
 import knex from 'knex';
-import { knexFileConfig } from '../knexfile';
+import * as knexFileConfig from '../knexfile';
 
-const environment = 'development'; // process.env.ENVIRONMENT || 'development';
+const environment = process.env.ENVIRONMENT || 'development';
 const config = knexFileConfig[environment];
 export const database = knex(config);
