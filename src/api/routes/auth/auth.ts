@@ -11,13 +11,16 @@ export const authRoute = (app: Router) => {
      * @param {string} email
      * @param {string} password
      */
-    route.post('/signUp', authController.signUp);
+    route.post('/signUp', authController.signUp).bind((authController));
 
     /**
      * @param {string} email
      * @param {string} password
      */
-    route.post('/signIn', authController.signIn);
+    route.post('/signIn', authController.signIn.bind(authController));
+
+
+    route.get('/refreshToken', authController.refreshToken.bind(authController));
 };
 
 

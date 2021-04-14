@@ -1,5 +1,6 @@
 import knex from 'knex';
-import * as knexFileConfig from '../knexfile';
+// @ts-ignore
+import * as knexFileConfig from './../knexfile';
 
 const environment = process.env.ENVIRONMENT || 'development';
 const config = knexFileConfig[environment];

@@ -4,8 +4,8 @@ module.exports = {
         connection: {
             host : 'localhost',
             user : 'postgres',
-            password : '130606',
-            database : 'users',
+            password : '1306',
+            database : 'node_training',
             charset: 'utf8'
         },
         migrations: {

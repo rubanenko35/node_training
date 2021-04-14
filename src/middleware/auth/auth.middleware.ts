@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
+import config from './../../config';
 
 
 class AuthMiddleware {
-    private readonly nonSecurePaths: RegExp[] = [new RegExp('/api/auth/*')];
+    private readonly nonSecurePaths: RegExp[] = [new RegExp('/api/auth/sign*')];
 
     public verifyToken(req: Request, res: Response, next: NextFunction) {
         const isNonSecurePath = this.isPathNonSecure(req.path);
@@ -19,7 +20,7 @@ class AuthMiddleware {
 
         const token = authHeader.replace('Bearer ', '');
         try {
-            jwt.verify(token, process.env.JWT_SECRET);
+            jwt.verify(token, config.jwtSecret);
 
             return next();
         } catch (e) {

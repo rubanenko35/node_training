@@ -26,6 +26,8 @@ const config = {
    */
   jwtSecret: process.env.JWT_SECRET,
   jwtAlgorithm: process.env.JWT_ALGO,
+  jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
+  jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
 
   /**
    * Used by winston logger
@@ -34,22 +36,6 @@ const config = {
     level: process.env.LOG_LEVEL || 'silly',
   },
 
-  /**
-   * Agenda.js stuff
-   */
-  agenda: {
-    dbCollection: process.env.AGENDA_DB_COLLECTION,
-    pooltime: process.env.AGENDA_POOL_TIME,
-    concurrency: parseInt(process.env.AGENDA_CONCURRENCY, 10),
-  },
-
-  /**
-   * Agendash config
-   */
-  agendash: {
-    user: 'agendash',
-    password: '123456',
-  },
   /**
    * API configs
    */
@@ -60,8 +46,8 @@ const config = {
    * Mailgun email credentials
    */
   emails: {
-    apiKey: process.env.MAILGUN_API_KEY,
-    domain: process.env.MAILGUN_DOMAIN,
+    // apiKey: process.env.MAILGUN_API_KEY,
+    // domain: process.env.MAILGUN_DOMAIN,
   },
 };
 
