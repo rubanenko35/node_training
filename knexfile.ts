@@ -1,13 +1,11 @@
-import LoggerInstance from './src/loaders/logger';
-
-export const knexFileConfig = {
+module.exports = {
     development: {
         client: 'pg',
         connection: {
             host : 'localhost',
             user : 'postgres',
-            password : '130606',
-            database : 'users',
+            password : '1306',
+            database : 'node_training',
             charset: 'utf8'
         },
         migrations: {
