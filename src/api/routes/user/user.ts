@@ -8,6 +8,25 @@ const filePath = 'C:\\dev\\node_training\\src\\assets\\user-mocks.json';
 export const users = (app: Router) => {
     app.use('/users', route);
 
+    /**
+     * @swagger
+     * /api/users/getAll:
+     *   get:
+     *     security:
+     *       - bearerAuth: []
+     *     summary: Get all users
+     *     tags:
+     *       - User
+     *     responses:
+     *       200:
+     *         description: Return all users
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/User'
+     *       404:
+     *         description: Users was not found
+     */
     route.get('/getAll', (request: Request, response: Response) => {
         fs.readFile(filePath, 'utf8', (error, jsonString) => {
             if (error) {

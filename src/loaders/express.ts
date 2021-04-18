@@ -1,9 +1,38 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import { setup, serve } from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
 import config from '../config';
 import { routes } from '../api';
 import { authMiddleware } from '../middleware/auth/auth.middleware';
+
+const options: swaggerJSDoc.Options = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'nodeJs test API',
+            version: '1.0.0',
+            description: 'A simple express doc',
+        },
+        servers: [
+            {
+                url: 'http://localhost:3000',
+                description: 'Development server',
+            },
+        ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
+    },
+    apis: ['./src/api/routes/**/*.ts'],
+};
 
 export const expressLoader = ({ app }: { app: express.Application }): void => {
     /**
@@ -16,6 +45,9 @@ export const expressLoader = ({ app }: { app: express.Application }): void => {
     app.head('/status', (request, response) => {
         response.status(200).end();
     });
+
+    const specs = swaggerJSDoc(options);
+    app.use('/api-docs', serve, setup(specs));
 
     // Useful if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
     // It shows the real origin IP in the heroku or Cloudwatch logs
