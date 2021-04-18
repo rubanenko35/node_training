@@ -1,21 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
-import config from './../../config';
-
+import config from '../../config';
 
 class AuthMiddleware {
     private readonly nonSecurePaths: RegExp[] = [new RegExp('/api/auth/sign*')];
 
-    public verifyToken(req: Request, res: Response, next: NextFunction) {
-        const isNonSecurePath = this.isPathNonSecure(req.path);
+    public verifyToken(
+        request: Request,
+        response: Response,
+        next: NextFunction,
+    ) {
+        const isNonSecurePath = this.isPathNonSecure(request.path);
 
-        if(isNonSecurePath) {
+        if (isNonSecurePath) {
             return next();
         }
 
-        const authHeader = req.get('Authorization');
+        const authHeader = request.get('Authorization');
         if (!authHeader) {
-            return res.status(401).json({ message: 'Token is not provided'});
+            return response
+                .status(401)
+                .json({ message: 'Token is not provided' });
         }
 
         const token = authHeader.replace('Bearer ', '');
@@ -23,14 +28,13 @@ class AuthMiddleware {
             jwt.verify(token, config.jwtSecret);
 
             return next();
-        } catch (e) {
-            return res.status(401).json({ message: 'Invelid token' });
+        } catch {
+            return response.status(401).json({ message: 'Invalid token' });
         }
-
     }
 
     private isPathNonSecure(requestPath: string): boolean {
-        return !!this.nonSecurePaths.find(regexp => requestPath.match(regexp));
+        return !!this.nonSecurePaths.some(regexp => requestPath.match(regexp));
     }
 }
 

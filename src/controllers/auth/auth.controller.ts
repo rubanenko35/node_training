@@ -1,98 +1,144 @@
-import { database } from '../../../knex/knex';
 import { Request, Response } from 'express';
 import * as bCrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
-import { IUser } from './types/user.interface';
-import config from './../../config';
-import { TokenTypeEnum } from './types/token-type.enum';
 import * as uuid from 'uuid';
-import { IRefreshToken } from './types/refresh-token.interface';
+import { database } from '../../../knex/knex';
+import { UserInterface } from './types/user.interface';
+import config from '../../config';
+import { TokenTypeEnum } from './types/token-type.enum';
+import { RefreshTokenInterface } from './types/refresh-token.interface';
 
 class AuthController {
-    public async signUp(req: Request, res: Response): Promise<Response> {
-        const { email, password } = req.body;
-        if(!email || !password) {
-            return res.status(401).send(`"Email" and "Password" are required`);
+    public async signUp(
+        request: Request,
+        response: Response,
+    ): Promise<Response> {
+        const { email, password } = request.body;
+        if (!email || !password) {
+            return response
+                .status(401)
+                .send(`"Email" and "Password" are required`);
         }
 
         const hashedPassword = await bCrypt.hash(password, 12);
-        return database('users_table').insert([{email, password_hash: hashedPassword}]).then((data) => {
-            return res.json(`User has been successfully created`);
-        }, (error) => {
-            return res.status(401).json(error);
-        });
+        return database('users_table')
+            .insert([{ email, password_hash: hashedPassword }])
+            .then(
+                data => {
+                    return response.json(`User has been successfully created`);
+                },
+                error => {
+                    return response.status(401).json(error);
+                },
+            );
     }
 
-    public async signIn(req: Request, res: Response): Promise<Response> {
-        const { email, password } = req.body;
-        if(!email || !password) {
-            return res.status(401).json({ message: `"Email" and "Password" are required` });
+    public async signIn(
+        request: Request,
+        response: Response,
+    ): Promise<Response> {
+        const { email, password } = request.body;
+        if (!email || !password) {
+            return response
+                .status(401)
+                .json({ message: `"Email" and "Password" are required` });
         }
 
-        const user: IUser = await database('users_table').where({ email }).first();
+        const user: UserInterface = await database('users_table')
+            .where({ email })
+            .first();
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid credentials. The "User" is not found' });
+            return response.status(401).json({
+                message: 'Invalid credentials. The "User" is not found',
+            });
         }
 
         const isValid = await bCrypt.compare(password, user.password_hash);
 
         if (isValid) {
-            return this.updateTokens(user.id).then(({ accessToken, refreshToken }) => {
-                res.setHeader('Set-Cookie', `refreshToken=${refreshToken}; HttpOnly`);
+            return this.updateTokens(user.id).then(
+                ({ accessToken, refreshToken }) => {
+                    response.setHeader(
+                        'Set-Cookie',
+                        `refreshToken=${refreshToken}; HttpOnly`,
+                    );
 
-                return  res.json({ token: accessToken });
-            });
-        } else {
-            return res.status(401).json({ message: 'Invalid credentials. Wrong "password"' });
+                    return response.json({ token: accessToken });
+                },
+            );
+            return response
+                .status(401)
+                .json({ message: 'Invalid credentials. Wrong "password"' });
         }
     }
 
-    public refreshToken(req: Request, res: Response): Response {
-        const refreshHeader = req.get('cookie');
+    public refreshToken(request: Request, response: Response): Response {
+        const refreshHeader = request.get('cookie');
         if (!refreshHeader) {
-            return res.status(401).json({ message: 'Refresh token is not provided'});
+            return response
+                .status(401)
+                .json({ message: 'Refresh token is not provided' });
         }
         const refreshToken = refreshHeader.replace('refreshToken=', '');
-        let payload: { id: string; type: TokenTypeEnum }
+        let payload: { id: string; type: TokenTypeEnum };
         try {
             payload = jwt.verify(refreshToken, config.jwtSecret);
             if (payload.type !== TokenTypeEnum.refresh) {
-                return res.status(400).json({ message: 'Invalid refresh token type'});
+                return response
+                    .status(400)
+                    .json({ message: 'Invalid refresh token type' });
             }
-        } catch (err) {
-            if (err instanceof jwt.TokenExpiredError) {
-                return res.status(400).json({ message: 'Refresh token expired'});
-            } else {
-                return res.status(400).json({ message: 'Invalid refresh token'});
+        } catch (error) {
+            if (error instanceof jwt.TokenExpiredError) {
+                return response
+                    .status(400)
+                    .json({ message: 'Refresh token expired' });
             }
+            return response
+                .status(400)
+                .json({ message: 'Invalid refresh token' });
         }
 
-        database('refresh_token').where({ tokenId: payload.id }).first().then((token: IRefreshToken) => {
-            if (!token) {
-                throw new Error('No token in database');
-            }
+        database('refresh_token')
+            .where({ tokenId: payload.id })
+            .first()
+            .then((token: RefreshTokenInterface) => {
+                if (!token) {
+                    throw new Error('No token in database');
+                }
 
-            return this.updateTokens(token.userId);
+                return this.updateTokens(token.userId);
+            })
+            .then(({ accessToken, refreshToken }) => {
+                response.setHeader(
+                    'Set-Cookie',
+                    `refreshToken=${refreshToken}; HttpOnly`,
+                );
 
-        }).then(({ accessToken, refreshToken }) => {
-            res.setHeader('Set-Cookie', `refreshToken=${refreshToken}; HttpOnly`);
-
-            return  res.json({ token: accessToken });
-        }).catch(err => res.status(500).json({ message: err.message}));
+                return response.json({ token: accessToken });
+            })
+            .catch(error =>
+                response.status(500).json({ message: error.message }),
+            );
     }
 
-    private updateTokens(userId: number): Promise<{ accessToken: string; refreshToken: string; }> {
+    private updateTokens(
+        userId: number,
+    ): Promise<{ accessToken: string; refreshToken: string }> {
         const accessTokenData = this.generateAccessToken(userId);
         const refreshTokenData = this.generateRefreshToken();
-        const payload: IRefreshToken = { tokenId: refreshTokenData.tokenId, userId };
+        const payload: RefreshTokenInterface = {
+            tokenId: refreshTokenData.tokenId,
+            userId,
+        };
 
         return this.replaceDbRefreshToken(payload).then(() => {
             return {
                 accessToken: accessTokenData.token,
-                refreshToken: refreshTokenData.token
-            }
-        })
+                refreshToken: refreshTokenData.token,
+            };
+        });
     }
 
     private generateAccessToken(userId: number) {
@@ -113,14 +159,20 @@ class AuthController {
         return { token, tokenId: payload.id };
     }
 
-    private replaceDbRefreshToken(params: { tokenId: string; userId: number }): Promise<any> {
+    private replaceDbRefreshToken(parameters: {
+        tokenId: string;
+        userId: number;
+    }): Promise<any> {
         const table = database('refresh_token');
 
-        return table.where({ userId: params.userId }).first().del().then(() => {
-            return table.insert([params]);
-        });
+        return table
+            .where({ userId: parameters.userId })
+            .first()
+            .del()
+            .then(() => {
+                return table.insert([parameters]);
+            });
     }
-
 }
 
 export const authController = new AuthController();

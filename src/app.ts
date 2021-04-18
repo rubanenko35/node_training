@@ -13,7 +13,8 @@ app.listen(config.port, async () => {
       🛡️  Server listening on port: ${config.port} 🛡️
       ################################################
     `);
-}).on('error', err => {
-    LoggerInstance.error(err);
+}).on('error', error => {
+    LoggerInstance.error(error);
+    // eslint-disable-next-line unicorn/no-process-exit
     process.exit(1);
 });
