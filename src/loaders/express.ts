@@ -6,6 +6,7 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import config from '../config';
 import { routes } from '../api';
 import { authMiddleware } from '../middleware/auth/auth.middleware';
+import { clsMiddleware } from '../middleware/cls/cls.middleware';
 
 const options: swaggerJSDoc.Options = {
     definition: {
@@ -50,7 +51,7 @@ export const expressLoader = ({ app }: { app: express.Application }): void => {
     app.use('/api-docs', serve, setup(specs));
 
     // Useful if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
-    // It shows the real origin IP in the heroku or Cloudwatch logs
+    // It shows the real origin IP in the heroku or Cloudwatch cls
     app.enable('trust proxy');
 
     // The magic package that prevents frontend developers going nuts
@@ -61,7 +62,10 @@ export const expressLoader = ({ app }: { app: express.Application }): void => {
     // Middleware that transforms the raw string of req.body into json
     app.use(bodyParser.json());
 
-    app.use(authMiddleware.verifyToken.bind(authMiddleware));
+    app.use(
+        clsMiddleware.setTraceId.bind(clsMiddleware),
+        authMiddleware.verifyToken.bind(authMiddleware),
+    );
     // Load API routes
     app.use(config.api.prefix, routes());
 

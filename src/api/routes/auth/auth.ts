@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { body } from 'express-validator';
 import { authController } from '../../../controllers/auth/auth.controller';
 
 const route = Router();
@@ -51,7 +52,12 @@ export const authRoute = (app: Router) => {
      *       500:
      *         description: Some server error
      */
-    route.post('/signUp', authController.signUp).bind(authController);
+    route.post(
+        '/signUp',
+        body('email').isEmail(),
+        body('password').isLength({ min: 5 }),
+        authController.signUp.bind(authController),
+    );
 
     /**
      * @swagger

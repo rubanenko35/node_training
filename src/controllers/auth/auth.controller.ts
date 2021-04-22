@@ -2,24 +2,27 @@ import { Request, Response } from 'express';
 import * as bCrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import * as uuid from 'uuid';
+import { validationResult } from 'express-validator';
 import { database } from '../../../knex/knex';
 import { UserInterface } from './types/user.interface';
 import config from '../../config';
 import { TokenTypeEnum } from './types/token-type.enum';
 import { RefreshTokenInterface } from './types/refresh-token.interface';
+import LoggerInstance from '../../loaders/logger';
 
 class AuthController {
     public async signUp(
         request: Request,
         response: Response,
     ): Promise<Response> {
-        const { email, password } = request.body;
-        if (!email || !password) {
+        const errors = validationResult(request);
+        if (!errors.isEmpty()) {
             return response
                 .status(401)
                 .send(`"Email" and "Password" are required`);
         }
 
+        const { email, password } = request.body;
         const hashedPassword = await bCrypt.hash(password, 12);
         return database('users_table')
             .insert([{ email, password_hash: hashedPassword }])
@@ -57,6 +60,7 @@ class AuthController {
         const isValid = await bCrypt.compare(password, user.password_hash);
 
         if (isValid) {
+            LoggerInstance.info(`${user.email} singed in`);
             return this.updateTokens(user.id).then(
                 ({ accessToken, refreshToken }) => {
                     response.setHeader(
@@ -67,10 +71,14 @@ class AuthController {
                     return response.json({ token: accessToken });
                 },
             );
-            return response
-                .status(401)
-                .json({ message: 'Invalid credentials. Wrong "password"' });
         }
+
+        LoggerInstance.error(
+            `${user.email} Invalid credentials. Wrong "password"`,
+        );
+        return response
+            .status(401)
+            .json({ message: 'Invalid credentials. Wrong "password"' });
     }
 
     public refreshToken(request: Request, response: Response): Response {
