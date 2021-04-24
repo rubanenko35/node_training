@@ -3,51 +3,14 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import { setup, serve } from 'swagger-ui-express';
 import swaggerJSDoc from 'swagger-jsdoc';
-import config from '../config';
-import { routes } from '../api';
-import { authMiddleware } from '../middleware/auth/auth.middleware';
-import { clsMiddleware } from '../middleware/cls/cls.middleware';
-
-const options: swaggerJSDoc.Options = {
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'nodeJs test API',
-            version: '1.0.0',
-            description: 'A simple express doc',
-        },
-        servers: [
-            {
-                url: 'http://localhost:3000',
-                description: 'Development server',
-            },
-        ],
-        components: {
-            securitySchemes: {
-                bearerAuth: {
-                    type: 'http',
-                    scheme: 'bearer',
-                    bearerFormat: 'JWT',
-                },
-            },
-        },
-    },
-    apis: ['./src/api/routes/**/*.ts'],
-};
+import config from './application-config';
+import { authMiddleware } from '../api/middlewares/auth/auth.middleware';
+import { clsMiddleware } from '../api/middlewares/cls/cls.middleware';
+import swaggerOptions from './swagger-optiona';
+import router from '../api/routes';
 
 export const expressLoader = ({ app }: { app: express.Application }): void => {
-    /**
-     * Health Check endpoints
-     * @TODO Explain why they are here
-     */
-    app.get('/status', (request, response) => {
-        response.status(200).end();
-    });
-    app.head('/status', (request, response) => {
-        response.status(200).end();
-    });
-
-    const specs = swaggerJSDoc(options);
+    const specs = swaggerJSDoc(swaggerOptions);
     app.use('/api-docs', serve, setup(specs));
 
     // Useful if you're behind a reverse proxy (Heroku, Bluemix, AWS ELB, Nginx, etc)
@@ -67,7 +30,7 @@ export const expressLoader = ({ app }: { app: express.Application }): void => {
         authMiddleware.verifyToken.bind(authMiddleware),
     );
     // Load API routes
-    app.use(config.api.prefix, routes());
+    app.use(config.api.prefix, router);
 
     /// catch 404 and forward to error handler
     app.use((request, response, next) => {

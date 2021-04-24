@@ -1,7 +1,7 @@
 import express from 'express';
 import { expressLoader } from './loaders/express';
 import LoggerInstance from './loaders/logger';
-import config from './config';
+import config from './loaders/application-config';
 
 const app = express();
 

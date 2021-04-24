@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as uuid from 'uuid';
 import { createNamespace } from 'cls-hooked';
-import config from '../../config';
+import config from '../../../loaders/application-config';
 
 class ClsMiddleware {
     private clsNamespace: any;

@@ -3,4 +3,4 @@
 /.idea/
 /uploads/
 /.env
-/src/loaders/logs/
+/logs/
